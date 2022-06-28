@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+    golang:
+        # build:
+        #     context: ./
+        #     dockerfile: Dockerfile
+        image: golang-prometheus-api_golang:latest   
+        container_name: golang 
+        restart: always
+        ports:
+            - 9000:9000
+        networks:
+          - main_network
+    prometheus:
+        image: prom/prometheus:v2.24.0
+        container_name: prometheus
+        volumes:
+          - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+          - prometheus_data:/prometheus
+        command:
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--storage.tsdb.path=/prometheus'
+          - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+          - '--web.console.templates=/usr/share/prometheus/consoles'
+        ports:
+          - 9090:9090
+        restart: always
+        networks:
+          - main_network
+
+    grafana:
+        image: grafana/grafana:latest
+        container_name: grafana
+        volumes: 
+          - grafana_data:/var/lib/grafana
+        environment:
+          - GF_AUTH_DISABLE_LOGIN_FORM=false
+          - GF_AUTH_ANONYMOUS_ENABLED=false
+          - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+        ports:
+          - 3000:3000
+        networks:
+          - main_network        
+
+volumes: 
+  grafana_data:
+  prometheus_data:
+
+networks:
+  main_network:
+    driver: bridge
